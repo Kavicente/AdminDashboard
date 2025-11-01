@@ -1,0 +1,320 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: #ffffff;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* MAIN CONTAINER */
+.container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* LEFT PANEL: Logo + Auto-Login */
+.left-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.left-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 0;
+}
+
+.left-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+.alert-logo {
+    width: 180px;
+    height: auto;
+    margin-bottom: 25px;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.alert-logo:hover {
+    transform: scale(1.05);
+}
+
+.left-panel h1 {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.left-panel h3 {
+    font-size: 18px;
+    opacity: 0.9;
+    margin: 20px 0 30px;
+}
+
+/* AUTO-LOGIN PROFILES */
+.auto-login-container {
+    width: 100%;
+    max-width: 400px;
+    margin-top: 30px;
+}
+
+.auto-login-container h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #e0e7ff;
+    font-weight: 600;
+}
+
+.auto-login-list {
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.role-item {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    padding: 16px;
+    margin: 8px 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+.role-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    border-color: #66c2ff;
+}
+
+.role-item.empty {
+    opacity: 0.6;
+    cursor: default;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.role-item.empty:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+}
+
+/* RIGHT PANEL: Login Form */
+.right-panel {
+    flex: 1;
+    background: #f8fafc;
+    padding: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #1e293b;
+    overflow-y: auto;
+}
+
+.signup-form {
+    width: 100%;
+    max-width: 500px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e2e8f0;
+}
+
+.signup-form h1 {
+    font-size: 32px;
+    margin-bottom: 30px;
+    color: #1e293b;
+    text-align: center;
+    font-weight: 700;
+}
+
+/* FORM INPUTS */
+.signup-form label {
+    display: block;
+    margin-bottom: 18px;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.signup-form input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-top: 6px;
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.signup-form input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    background: #f8faff;
+}
+
+/* PASSWORD TOGGLE */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 60px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: 600;
+    user-select: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.toggle-password:hover {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+/* FORGOT PASSWORD LINK */
+.forgot-link {
+    display: block;
+    margin: 15px 0 20px;
+    color: #3b82f6;
+    font-size: 14px;
+    text-decoration: underline;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: #1e40af;
+}
+
+/* BUTTONS */
+.signup-form button {
+    background: #3b82f6;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 15px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    width: 100%;
+    margin: 12px 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.signup-form button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+
+.button2 {
+    background: #60a5fa;
+}
+
+.button2:hover {
+    background: #3b82f6;
+}
+
+.button3 {
+    background: #94a3b8;
+}
+
+.button3:hover {
+    background: #64748b;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .container {
+        flex-direction: column;
+    }
+    .left-panel, .right-panel {
+        min-height: 50vh;
+        padding: 40px 20px;
+    }
+    .left-panel {
+        order: 2;
+    }
+    .right-panel {
+        order: 1;
+    }
+    .alert-logo {
+        width: 140px;
+    }
+    .left-panel h1 {
+        font-size: 36px;
+    }
+    .signup-form {
+        padding: 30px;
+    }
+}
+
+@media (max-width: 600px) {
+    .signup-form {
+        padding: 25px;
+    }
+    .left-panel h1 {
+        font-size: 32px;
+    }
+    .auto-login-list {
+        max-height: 200px;
+    }
+}

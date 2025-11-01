@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DILG Dashboard</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo/alertnow.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dilgdash.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <nav>
+                <ul>
+                    <img src="{{ url_for('static', filename='logo/alertlogo.png') }}" alt="DILG Logo" class="alert-logo">
+                    <li><a href="#" onclick="showSection('home')"><span>Home</span> Overview</a></li>
+                    <li><a href="#" onclick="showSection('barangay')"><span>Barangay</span> Reports</a></li>
+                    <li><a href="#" onclick="showSection('cdrrmo')"><span>CDRRMO</span> Reports</a></li>
+                    <li><a href="#" onclick="showSection('bfp')"><span>BFP</span> Fire Incidents</a></li>
+                    <li><a href="#" onclick="showSection('health')"><span>Health</span> Emergencies</a></li>
+                    <li><a href="#" onclick="showSection('pnp')"><span>PNP</span> Crime & Road</a></li>
+                    <li><a href="#" onclick="showSection('charts')"><span>Charts</span> Analytics</a></li>
+                    <li><a href="/logout"><span>Log Out</span> Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" id="mainContent">
+            <header>
+                <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
+                <h1>DILG {{ session.dilg_user.municipality }} Dashboard</h1>
+                <p id="datetime">{{ current_datetime }}</p>
+            </header>
+
+            <!-- HOME: OVERVIEW -->
+            <section id="home" class="section active">
+                <h2>Emergency Heatmap</h2>
+                <div id="map"></div>
+
+                <div class="stats-grid">
+                    <div class="stat-item"><p>Total Alerts: <span id="total-incidents">{{ stats.total }}</span></p></div>
+                    <div class="stat-item"><p>Responded: <span id="responded-count">{{ responded_count }}</span></p></div>
+                    <div class="stat-item"><p>Pending: <span id="pending-count">{{ pending_count }}</span></p></div>
+                </div>
+
+                <div class="charts-grid">
+                    <canvas id="alertsBarangay"></canvas>
+                    <canvas id="alertsCDRRMO"></canvas>
+                    <canvas id="alertsBFP"></canvas>
+                    <canvas id="alertsHealth"></canvas>
+                    <canvas id="alertsPNP"></canvas>
+                </div>
+            </section>
+
+            <!-- BARANGAY SECTION -->
+            <section id="barangay" class="section">
+                <h2>Barangay Live Alerts</h2>
+                <div class="dropdown-container">
+                    <label for="barangayDropdown">Select Barangay: </label>
+                    <select id="barangayDropdown" onchange="jumpToBarangay()">
+                        <option value="">Select a Barangay</option>
+                        {% for barangay in barangays %}
+                        <option value="{{ barangay | replace(' ', '-') }}">{{ barangay }}</option>
+                        {% endfor %}
+                    </select>
+            </div>
+
+                <div id="barangayAlerts" class="alert-grid"></div>
+            </section>
+
+            <!-- CDRRMO, BFP, HEALTH, PNP -->
+            <section id="cdrrmo" class="section"><h2>CDRRMO Reports</h2><div id="cdrrmoAlerts" class="alert-grid"></div></section>
+            <section id="bfp" class="section"><h2>BFP Fire Incidents</h2><div id="bfpAlerts" class="alert-grid"></div></section>
+            <section id="health" class="section"><h2>Health Emergencies</h2><div id="healthAlerts" class="alert-grid"></div></section>
+            <section id="pnp" class="section"><h2>PNP Crime & Road</h2><div id="pnpAlerts" class="alert-grid"></div></section>
+
+            <!-- CHARTS SECTION -->
+            <section id="charts" class="section">
+                <h2>Analytics & Charts</h2>
+                <div class="tabs">
+                    <button class="tab active" onclick="filterChart('today')">Today</button>
+                    <button class="tab" onclick="filterChart('daily')">Daily</button>
+                    <button class="tab" onclick="filterChart('weekly')">Weekly</button>
+                    <button class="tab" onclick="filterChart('monthly')">Monthly</button>
+                    <button class="tab" onclick="filterChart('yearly')">Yearly</button>
+                </div>
+                <div class="dropdown-container">
+                    <label>Select Barangay: </label>
+                    <select id="chartBarangayDropdown" onchange="jumpToChart()"></select>
+                </div>
+
+                <!-- All Charts -->
+                <div id="allCharts" class="charts-grid">
+                    <!-- Road -->
+                    <canvas id="roadCause"></canvas><canvas id="roadType"></canvas><canvas id="driverGender"></canvas>
+                    <canvas id="vehicleType"></canvas><canvas id="driverAge"></canvas><canvas id="driverCondition"></canvas>
+                    <!-- Fire -->
+                    <canvas id="fireCause"></canvas><canvas id="fireWeather"></canvas><canvas id="fireSeverity"></canvas>
+                    <!-- Health -->
+                    <canvas id="healthType"></canvas><canvas id="healthCause"></canvas><canvas id="healthWeather"></canvas>
+                    <canvas id="patientAge"></canvas><canvas id="patientGender"></canvas>
+                    <!-- Crime -->
+                    <canvas id="crimeType"></canvas><canvas id="crimeCause"></canvas><canvas id="crimeLevel"></canvas>
+                    <canvas id="suspectGender"></canvas><canvas id="victimGender"></canvas>
+                    <canvas id="suspectAge"></canvas><canvas id="victimAge"></canvas>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const data = {{ data|tojson }};
+        const socket = io('https://alertnow-wi0n.onrender.com', { transports: ['websocket'] });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const lat = {{ lat_coord|default(14.0642) }};
+            const lon = {{ lon_coord|default(121.3233) }};
+            const mapboxToken = 'pk.eyJ1Ijoia3VtaXRva2lydSIsImEiOiJjbWNvZXpkdDQwNmdvMnNyMnNtNGw5NGI1In0.3Y9z5y4saOL76Eb5c-o0UQ';
+            const tileLayerUrl = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`;
+
+            const dilgMap = L.map('map').setView([lat, lon], 16);
+
+            var satellite = L.tileLayer(tileLayerUrl, {
+                attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                tileSize: 512,
+                zoomOffset: -1
+            });
+
+            var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            });
+
+            satellite.addTo(dilgMap);
+
+            var baseLayers = {
+                "Satellite with Labels": satellite,
+                "OpenStreetMap": osm
+            };
+            L.control.layers(baseLayers).addTo(dilgMap);
+
+        });
+
+        function jumpToBarangay() {
+            const dropdown = document.getElementById('barangayDropdown');
+            const barangayId = dropdown.value;
+            if (barangayId) {
+                const section = document.getElementById(`${currentSection}-barangay-${barangayId}`);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mainContent').classList.toggle('shifted');
+        }
+
+        // Show Section
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (id === 'home') initMap();
+        }
+
+        // Init Map
+        function initMap() {
+            const map = L.map('map').setView([14.6760, 121.0437], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            JSON.parse(data.heatmap).forEach(d => {
+                const color = d.count > 10 ? '#ff0000' : d.count > 5 ? '#ffff00' : '#00ff00';
+                L.circleMarker([d.lat + Math.random()*0.02, d.lon + Math.random()*0.02], {
+                    color, radius: Math.min(d.count * 2, 25), fillOpacity: 0.7
+                }).addTo(map).bindPopup(`${d.barangay}: ${d.count} alerts`);
+            });
+        }
+
+        // Render Charts
+        function renderChart(id, type, labels, values, title) {
+            new Chart(document.getElementById(id), {
+                type, data: { labels, datasets: [{ label: title, data: values, backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        // Populate All Charts
+        function populateCharts() {
+            const fields = ['road_cause','road_type','driver_gender','vehicle_type','driver_age','driver_condition',
+                            'fire_cause','fire_weather','fire_severity',
+                            'health_type','health_cause','health_weather','patient_age','patient_gender',
+                            'crime_type','crime_cause','crime_level','suspect_gender','victim_gender','suspect_age','victim_age'];
+            fields.forEach(f => {
+                const d = JSON.parse(data[f]);
+                renderChart(f, 'doughnut', Object.keys(d), Object.values(d), f.replace(/_/g, ' ').toUpperCase());
+            });
+        }
+
+        // Live Alerts
+        socket.on('new_alert', alert => {
+            const container = document.getElementById(`${alert.role || 'barangay'}Alerts`) || document.getElementById('barangayAlerts');
+            if (container) {
+                const div = document.createElement('div');
+                div.className = 'alert-item';
+                div.innerHTML = `<strong>${alert.emergency_type}</strong><br>${alert.barangay}<br><small>${new Date(alert.timestamp).toLocaleString()}</small>`;
+                container.prepend(div);
+            }
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            populateCharts();
+            document.querySelectorAll('#barangaySelect, #chartBarangayDropdown').forEach(sel => {
+                data.barangays.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b; opt.textContent = b;
+                    sel.appendChild(opt);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

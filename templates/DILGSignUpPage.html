@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DILG Agency Sign Up</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo/alertnow.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminsignup.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- LEFT: Info -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='logo/alertlogo.png') }}" alt="DILG Logo" class="alert-logo">
+            <h1>DILG Agency</h1>
+            <h3>Register your agency to access the dashboard</h3>
+        </div>
+
+        <!-- RIGHT: Form -->
+        <div class="right-panel">
+            <form action="/dilg_signup" method="post" class="signup-form">
+                <h1>DILG Agency Sign Up</h1>
+
+                <label>Assigned Municipality:
+                    <input type="text" name="municipality" placeholder="e.g. San Pablo City" required>
+                </label>
+
+                <label>Contact Number:
+                    <input type="tel" name="contact_no" placeholder="e.g. 09123456789" required>
+                </label>
+
+                <label class="password-label">Password:
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="password" required>
+                        <span class="toggle-password" onclick="togglePassword()">Show</span>
+                    </div>
+                </label>
+
+                <button type="submit">Sign Up</button>
+                <button type="button" class="button2" onclick="window.location.href='/dilg_login'">Log In</button>
+                <button type="button" class="button3" onclick="window.location.href='/choose_login_type'">Back</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const toggle = document.querySelector('.toggle-password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+            toggle.textContent = input.type === 'password' ? 'Show' : 'Hide';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DILG Agency Log In</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo/alertnow.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlogin.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- LEFT: Auto-Login -->
+        <div class="left-panel">
+            <img src="{{ url_for('static', filename='logo/alertlogo.png') }}" alt="DILG Logo" class="alert-logo">
+            <h1>DILG Login</h1>
+            <h3>Quick access with saved profiles</h3>
+
+            <div class="auto-login-container">
+                <h3>Saved Accounts</h3>
+                <div class="auto-login-list">
+                    {% if dilg_users %}
+                        {% for user in dilg_users %}
+                            <div class="role-item" onclick="autoLogin('{{ user.municipality }}', '{{ user.contact_no }}', '{{ user.password }}')">
+                                <strong>{{ user.municipality|upper }}</strong><br>
+                                {{ user.contact_no }}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="role-item empty">No saved accounts</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Login Form -->
+        <div class="right-panel">
+            <form action="/dilg_login" method="post" class="signup-form">
+                <h1>DILG Agency Log In</h1>
+
+                <label>Assigned Municipality:
+                    <input type="text" name="municipality" placeholder="e.g. San Pablo City" required>
+                </label>
+
+                <label>Contact Number:
+                    <input type="tel" name="contact_no" placeholder="e.g. 09123456789" required>
+                </label>
+
+                <label class="password-label">Password:
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="password" required>
+                        <span class="toggle-password" onclick="togglePassword()">Show</span>
+                    </div>
+                </label>
+
+                <a href="/pass_reset" class="forgot-link">Forgot Password? Click Here to Reset</a>
+
+                <button type="submit">Log In</button>
+                <button type="button" class="button2" onclick="window.location.href='/dilg_signup'">Sign Up</button>
+                <button type="button" class="button3" onclick="window.location.href='/choose_login_type'">Back</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function autoLogin(municipality, contact_no, password) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/dilg_login';
+
+            ['municipality', 'contact_no', 'password'].forEach((field, i) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = field;
+                input.value = arguments[i];
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const toggle = document.querySelector('.toggle-password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+            toggle.textContent = input.type === 'password' ? 'Show' : 'Hide';
+        }
+    </script>
+</body>
+</html>
